@@ -85,7 +85,7 @@ public class VKAccessToken {
     /**
      * Token scope
      */
-    private Map<String, Boolean> scope = null;
+    public Map<String, Boolean> scope = null;
 
     /**
      * Save token into specified file
