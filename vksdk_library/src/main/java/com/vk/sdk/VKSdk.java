@@ -147,6 +147,10 @@ public class VKSdk {
     }
 
     public static VKSdk customInitialize(Context ctx, int appId, String apiVer) {
+        return customInitialize(ctx, appId, apiVer, null);
+    }
+
+    public static VKSdk customInitialize(Context ctx, int appId, String apiVer, VKCallback<LoginState> loginStateCallback) {
         if (appId == 0) {
             appId = getIntFromPref(ctx, VK_SDK_APP_ID_PREF_KEY);
         }
@@ -157,7 +161,7 @@ public class VKSdk {
             throw new RuntimeException("your_app_id is 0");
         }
         sIsCustomInitialize = true;
-        VKSdk vkSdk = initialize(ctx, appId, apiVer);
+        VKSdk vkSdk = initialize(ctx, appId, apiVer, loginStateCallback);
         if (sCurrentAppId != 0) {
             storeIntToPref(ctx, VK_SDK_APP_ID_PREF_KEY, sCurrentAppId);
         }
@@ -203,12 +207,16 @@ public class VKSdk {
     }
 
     private synchronized static VKSdk initialize(Context applicationContext, int appId, String appVer) {
+        return initialize(applicationContext, appId, appVer, null);
+    }
+
+    private synchronized static VKSdk initialize(Context applicationContext, int appId, String appVer, VKCallback<LoginState> loginStateCallback) {
         if (sCurrentAppId == 0) {
             vkSdk = new VKSdk(applicationContext);
             sCurrentAppId = appId;
             sCurrentApiVersion = TextUtils.isEmpty(appVer) ? VKSdkVersion.DEFAULT_API_VERSION : appVer;
             sCurrentLoginState = LoginState.Unknown;
-            wakeUpSession(applicationContext);
+            wakeUpSession(applicationContext, loginStateCallback);
         }
 
         return vkSdk;

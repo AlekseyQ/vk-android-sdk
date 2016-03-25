@@ -1,1 +1,1 @@
-include ':vksdk_library', ':VKTestApplication'
+include ':vksdk_library', ':VKTestApplication', ':vkunity_library'
