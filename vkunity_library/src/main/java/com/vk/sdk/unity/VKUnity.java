@@ -2,10 +2,17 @@ package com.vk.sdk.unity;
 
 import android.app.Activity;
 import android.content.Context;
+import android.util.Log;
 
 import com.vk.sdk.VKAccessToken;
 import com.vk.sdk.VKAccessTokenTracker;
 import com.vk.sdk.VKSdk;
+import com.vk.sdk.api.VKApi;
+import com.vk.sdk.api.VKError;
+import com.vk.sdk.api.VKApiConst;
+import com.vk.sdk.api.VKParameters;
+import com.vk.sdk.api.VKRequest;
+import com.vk.sdk.api.VKResponse;
 import com.vk.sdk.util.VKUtil;
 
 import org.json.JSONArray;
@@ -139,4 +146,104 @@ public class VKUnity {
         return true;
     }
 
+    class VKUsersGetRequestListenerImpl extends VKRequest.VKRequestListener {
+
+        private String completeObjName;
+        private String completeMethodName;
+        private String errorObjName;
+        private String errorMethodName;
+        private String attemptFailedObjName;
+        private String attemptFailedMethodName;
+
+        VKUsersGetRequestListenerImpl(String completeObjName, String completeMethodName,
+                                             String errorObjName, String errorMethodName,
+                                             String attemptFailedObjName, String attemptFailedMethodName) {
+            this.completeObjName = completeObjName;
+            this.completeMethodName = completeMethodName;
+            this.errorObjName = errorObjName;
+            this.errorMethodName = errorMethodName;
+            this.attemptFailedObjName = attemptFailedObjName;
+            this.attemptFailedMethodName = attemptFailedMethodName;
+        }
+
+        private void sendMessageToUnity(String objName, String methodName, String msg) {
+            VKUnityUtil.sendMessageToUnity(objName, methodName, msg);
+        }
+
+        private void sendComplete(String msg) {
+            sendMessageToUnity(completeObjName, completeMethodName, msg);
+        }
+
+        private void sendError(String msg) {
+            sendMessageToUnity(errorObjName, errorMethodName, msg);
+        }
+
+        private void sendAttemptFailed(String msg) {
+            sendMessageToUnity(attemptFailedObjName, attemptFailedMethodName, msg);
+        }
+
+        @Override
+        public void onComplete(VKResponse response) {
+            if(response == null) {
+                sendComplete(VKUnity.RESULT_NULL);
+                return;
+            }
+
+            try {
+                JSONObject jsonObj = VKUnityUtil.toJsonObject(response);
+                sendComplete(jsonObj.toString());
+            } catch (JSONException e) {
+                sendComplete(VKUnity.RESULT_MAKE_ERROR);
+                if (VKSdk.DEBUG)
+                    e.printStackTrace();
+            }
+        }
+
+        @Override
+        public void onError(VKError error) {
+            if(error == null) {
+                sendError(VKUnity.RESULT_NULL);
+                return;
+            }
+
+            try {
+                JSONObject jsonObj = VKUnityUtil.toJsonObject(error);
+                sendError(jsonObj.toString());
+            } catch (JSONException e) {
+                sendError(VKUnity.RESULT_MAKE_ERROR);
+                if (VKSdk.DEBUG)
+                    e.printStackTrace();
+            }
+        }
+
+        @Override
+        public void attemptFailed(VKRequest request, int attemptNumber, int totalAttempts) {
+            //I don't really believe in progress
+            if(request == null) {
+                sendAttemptFailed(VKUnity.RESULT_NULL);
+                return;
+            }
+
+            JSONObject jsonObj = new JSONObject();
+            try {
+                jsonObj.put("request", VKUnityUtil.toJsonObject(request));
+                jsonObj.put("attemptNumber", attemptNumber);
+                jsonObj.put("totalAttempts", totalAttempts);
+                sendAttemptFailed(jsonObj.toString());
+            } catch (JSONException e) {
+                sendAttemptFailed(VKUnity.RESULT_MAKE_ERROR);
+                if (VKSdk.DEBUG)
+                    e.printStackTrace();
+            }
+        }
+    }
+
+    public void doUsersGetRequest(Activity activity,
+                                  String completeObjName, String completeMethodName,
+                                  String errorObjName, String errorMethodName,
+                                  String attemptFailedObjName, String attemptFailedMethodName,
+                                  String... args) {
+        VKRequest request = VKApi.users().get(VKParameters.from(args));
+        request.executeWithListener(new VKUsersGetRequestListenerImpl(completeObjName, completeMethodName, errorObjName, errorMethodName, attemptFailedObjName, attemptFailedMethodName));
+    }
 }

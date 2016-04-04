@@ -38,7 +38,7 @@ public class VKInitCallbackImpl implements VKCallback<VKSdk.LoginState> {
     @Override
     public void onResult(VKSdk.LoginState res) {
         if(res == null) {
-            sendFail(VKUnity.RESULT_NULL);
+            sendDone(VKUnity.RESULT_NULL);
             return;
         }
 

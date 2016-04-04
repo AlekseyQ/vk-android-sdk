@@ -4,6 +4,7 @@ import com.unity3d.player.UnityPlayer;
 import com.vk.sdk.VKAccessToken;
 import com.vk.sdk.api.VKError;
 import com.vk.sdk.api.VKRequest;
+import com.vk.sdk.api.VKResponse;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -83,5 +84,10 @@ public class VKUnityUtil {
 
         return jsonObj;
     }
+
+    public static JSONObject toJsonObject(VKResponse response) throws JSONException {
+        return response.json;
+    }
+
 
 }
